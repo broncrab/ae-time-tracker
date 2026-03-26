@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bronson Crabtree — Motion · Time Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #f7f6f3;
+    --surface:   #ffffff;
+    --border:    rgba(0,0,0,0.08);
+    --border-md: rgba(0,0,0,0.12);
+    --text:      #1a1a1a;
+    --muted:     #888;
+    --faint:     #bbb;
+    --accent:    #1a1a1a;
+    --green:     #2d7a4f;
+    --green-bg:  #edf7f1;
+    --amber:     #a05c00;
+    --amber-bg:  #fdf3e3;
+    --blue:      #1a4fa3;
+    --blue-bg:   #eef3fc;
+    --radius:    12px;
+    --radius-sm: 8px;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── Layout ── */
+  .page { max-width: 1040px; margin: 0 auto; padding: 48px 24px 80px; }
+
+  /* ── Header ── */
+  .header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 48px;
+    flex-wrap: wrap;
+  }
+
+  .header-left { display: flex; flex-direction: column; gap: 6px; }
+
+  .wordmark {
+    font-family: 'Instrument Serif', serif;
+    font-size: clamp(28px, 5vw, 42px);
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    color: var(--text);
+  }
+
+  .wordmark em {
+    font-style: italic;
+    color: var(--muted);
+  }
+
+  .tagline {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  .header-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+    padding-top: 4px;
+  }
+
+  .live-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--green);
+    background: var(--green-bg);
+    border-radius: 20px;
+    padding: 4px 10px;
+  }
+
+  .live-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse 2s ease infinite;
+  }
+
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  .sync-info {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--faint);
+    text-align: right;
+  }
+
+  /* ── Stats row ── */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 40px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 22px;
+  }
+
+  .stat-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin-bottom: 10px;
+  }
+
+  .stat-value {
+    font-family: 'Instrument Serif', serif;
+    font-size: 32px;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    color: var(--text);
+  }
+
+  .stat-sub {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  /* ── Controls ── */
+  .controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .search-wrap {
+    flex: 1;
+    min-width: 180px;
+    position: relative;
+  }
+
+  .search-icon {
+    position: absolute;
+    left: 12px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--faint);
+    font-size: 14px;
+    pointer-events: none;
+  }
+
+  input[type="text"] {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px 10px 34px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  input[type="text"]:focus { border-color: var(--border-md); }
+  input[type="text"]::placeholder { color: var(--faint); }
+
+  .btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+
+  .btn:hover { border-color: var(--border-md); color: var(--text); }
+
+  .btn-dark {
+    background: var(--text);
+    border-color: var(--text);
+    color: #fff;
+  }
+
+  .btn-dark:hover { background: #333; border-color: #333; color: #fff; }
+
+  /* ── Section label ── */
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin-bottom: 12px;
+  }
+
+  /* ── Project list ── */
+  .project-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .project-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: border-color 0.15s;
+  }
+
+  .project-card:hover { border-color: var(--border-md); }
+
+  .project-main {
+    display: grid;
+    grid-template-columns: 1fr auto auto auto auto;
+    align-items: center;
+    gap: 20px;
+    padding: 18px 22px;
+    cursor: pointer;
+  }
+
+  .project-name-wrap { min-width: 0; }
+
+  .project-name {
+    font-size: 15px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    letter-spacing: -0.01em;
+  }
+
+  .project-path {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--faint);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 2px;
+  }
+
+  .project-hours {
+    font-family: 'Instrument Serif', serif;
+    font-size: 22px;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+    color: var(--text);
+  }
+
+  .project-meta {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    white-space: nowrap;
+    text-align: right;
+  }
+
+  .project-date {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--faint);
+    white-space: nowrap;
+  }
+
+  /* ── Hours bar ── */
+  .hours-bar-wrap {
+    width: 80px;
+    height: 4px;
+    background: var(--bg);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .hours-bar {
+    height: 100%;
+    background: var(--text);
+    border-radius: 2px;
+    transition: width 0.4s ease;
+  }
+
+  /* ── Chevron ── */
+  .chevron {
+    font-size: 16px;
+    color: var(--faint);
+    transition: transform 0.2s, color 0.15s;
+    flex-shrink: 0;
+  }
+
+  .project-card.open .chevron { transform: rotate(90deg); color: var(--text); }
+
+  /* ── Sessions panel ── */
+  .sessions-panel {
+    display: none;
+    border-top: 1px solid var(--border);
+    padding: 0 22px 16px;
+  }
+
+  .project-card.open .sessions-panel { display: block; }
+
+  .sessions-header {
+    display: grid;
+    grid-template-columns: 100px 90px 1fr 80px 70px;
+    gap: 16px;
+    padding: 12px 0 8px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--faint);
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 4px;
+  }
+
+  .session-row {
+    display: grid;
+    grid-template-columns: 100px 90px 1fr 80px 70px;
+    gap: 16px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    align-items: center;
+    font-size: 13px;
+  }
+
+  .session-row:last-child { border-bottom: none; }
+
+  .session-date { color: var(--muted); font-family: 'DM Mono', monospace; font-size: 12px; }
+  .session-dur  { font-weight: 600; letter-spacing: -0.01em; }
+  .session-time { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); }
+  .session-saves{ font-family: 'DM Mono', monospace; font-size: 11px; color: var(--faint); }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-weight: 500;
+  }
+
+  .badge-done   { background: var(--bg); color: var(--muted); }
+  .badge-active { background: var(--green-bg); color: var(--green); }
+
+  /* ── Empty / loading ── */
+  .empty-state {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 64px 32px;
+    text-align: center;
+  }
+
+  .empty-icon {
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 16px;
+    font-size: 22px;
+    color: var(--faint);
+  }
+
+  .empty-state h3 { font-size: 17px; font-weight: 600; margin-bottom: 6px; }
+  .empty-state p  { font-size: 13px; color: var(--muted); line-height: 1.7; max-width: 360px; margin: 0 auto; }
+
+  .loading-state {
+    text-align: center;
+    padding: 64px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--faint);
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .spinner {
+    width: 20px; height: 20px;
+    border: 2px solid var(--border);
+    border-top-color: var(--text);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin: 0 auto 16px;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 700px) {
+    .page { padding: 32px 16px 60px; }
+
+    .project-main {
+      grid-template-columns: 1fr auto auto;
+      gap: 12px;
+    }
+
+    .project-main .project-meta,
+    .project-main .project-date,
+    .project-main .hours-bar-wrap { display: none; }
+
+    .sessions-header,
+    .session-row {
+      grid-template-columns: 90px 80px 1fr 60px;
+    }
+
+    .sessions-header > :last-child,
+    .session-row > :last-child { display: none; }
+
+    .stats { grid-template-columns: 1fr 1fr; }
+  }
+
+  @media (max-width: 440px) {
+    .wordmark { font-size: 26px; }
+    .stats { grid-template-columns: 1fr; }
+    .header { flex-direction: column; gap: 16px; }
+    .header-right { align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-left">
+      <div class="wordmark">Bronson Crabtree <em>— Motion</em></div>
+      <div class="tagline">Project Time Tracker</div>
+    </div>
+    <div class="header-right">
+      <div class="live-badge">
+        <span class="live-dot"></span>
+        Live
+      </div>
+      <div class="sync-info">
+        Updated <span id="last-sync">—</span><br>
+        <span id="project-count">—</span> projects
+      </div>
+    </div>
+  </header>
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-label">Total Hours</div>
+      <div class="stat-value" id="stat-total">—</div>
+      <div class="stat-sub">all projects</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">This Week</div>
+      <div class="stat-value" id="stat-week">—</div>
+      <div class="stat-sub">hours logged</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Projects</div>
+      <div class="stat-value" id="stat-projects">—</div>
+      <div class="stat-sub">with tracked time</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Sessions</div>
+      <div class="stat-value" id="stat-sessions">—</div>
+      <div class="stat-sub">total work sessions</div>
+    </div>
+  </div>
+
+  <!-- Controls -->
+  <div class="controls">
+    <div class="search-wrap">
+      <span class="search-icon">⌕</span>
+      <input type="text" id="search" placeholder="Search projects..." oninput="renderProjects()">
+    </div>
+    <button class="btn" onclick="loadData()">Refresh</button>
+    <button class="btn btn-dark" onclick="exportCSV()">Export CSV</button>
+  </div>
+
+  <!-- Projects -->
+  <div class="section-label">Projects</div>
+  <div class="project-list" id="project-list">
+    <div class="loading-state">
+      <div class="spinner"></div>
+      Connecting to database...
+    </div>
+  </div>
+
+</div>
+
+<script>
+const SUPABASE_URL = "https://afvcghmnhubrhyigytte.supabase.co";
+const SUPABASE_KEY = "sb_publishable_-suY_Udh6_H9v-Dg2kTEYg_DQFeXoKH";
+const TABLE        = "time_logs";
+
+let allData      = [];
+let openCards    = new Set();
+let maxHours     = 1;
+
+async function loadData() {
+  try {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/${TABLE}?select=*&order=updated_at.desc&limit=2000`,
+      { headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${SUPABASE_KEY}` } }
+    );
+    if (!res.ok) { showError(`Database error ${res.status}`); return; }
+    allData = await res.json();
+    const t = new Date();
+    document.getElementById("last-sync").textContent =
+      t.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    renderStats();
+    renderProjects();
+  } catch(e) {
+    showError(`Connection failed: ${e.message}`);
+  }
+}
+
+function groupByProject(data) {
+  const map = {};
+  for (const row of data) {
+    const key = row.project_name || "Unknown Project";
+    if (!map[key]) map[key] = { name: key, path: row.project_path || "", sessions: [], totalHours: 0, latestDate: "" };
+    map[key].sessions.push(row);
+    if ((row.session_date || "") > map[key].latestDate) map[key].latestDate = row.session_date || "";
+  }
+  for (const key in map) {
+    const s = map[key].sessions.slice().sort((a,b) => (b.updated_at||"").localeCompare(a.updated_at||""));
+    map[key].totalHours = Math.round((s[0]?.total_hours || 0) * 100) / 100;
+  }
+  return Object.values(map).sort((a,b) => b.totalHours - a.totalHours);
+}
+
+function renderStats() {
+  const projects = groupByProject(allData);
+  const totalH   = Math.round(projects.reduce((s,p) => s + p.totalHours, 0) * 10) / 10;
+  const weekAgo  = new Date(); weekAgo.setDate(weekAgo.getDate() - 7);
+  const weekStr  = weekAgo.toISOString().split("T")[0];
+  const weekH    = Math.round(allData.filter(r => (r.session_date||"") >= weekStr)
+                              .reduce((s,r) => s + (r.duration_hours||0), 0) * 10) / 10;
+
+  document.getElementById("stat-total").textContent    = fmtHrs(totalH);
+  document.getElementById("stat-week").textContent     = fmtHrs(weekH);
+  document.getElementById("stat-projects").textContent = projects.length;
+  document.getElementById("stat-sessions").textContent = allData.length;
+  document.getElementById("project-count").textContent = projects.length;
+
+  maxHours = Math.max(1, ...projects.map(p => p.totalHours));
+}
+
+function renderProjects() {
+  const query    = document.getElementById("search").value.toLowerCase();
+  const projects = groupByProject(allData).filter(p => p.name.toLowerCase().includes(query));
+  const list     = document.getElementById("project-list");
+
+  if (!projects.length) {
+    list.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">⏱</div>
+        <h3>${allData.length ? "No matching projects" : "No data yet"}</h3>
+        <p>${allData.length
+          ? "Try a different search term."
+          : "Open a project in After Effects. The sync helper will push data here automatically within a few minutes."}</p>
+      </div>`;
+    return;
+  }
+
+  list.innerHTML = projects.map(p => {
+    const isOpen   = openCards.has(p.name);
+    const cleanName = p.name.replace(/\.[^.]+$/, "");
+    const shortPath = p.path ? p.path.replace(/^.*\/([^/]+\/[^/]+)$/, "…/$1") : "";
+    const barPct    = Math.round((p.totalHours / maxHours) * 100);
+    const sessCount = p.sessions.length;
+
+    return `
+      <div class="project-card ${isOpen ? "open" : ""}" id="card-${slugify(p.name)}">
+        <div class="project-main" onclick="toggleCard('${esc(p.name)}')">
+          <div class="project-name-wrap">
+            <div class="project-name">${esc(cleanName)}</div>
+            ${shortPath ? `<div class="project-path">${esc(shortPath)}</div>` : ""}
+          </div>
+          <div class="hours-bar-wrap">
+            <div class="hours-bar" style="width:${barPct}%"></div>
+          </div>
+          <div class="project-hours">${fmtHrs(p.totalHours)}</div>
+          <div class="project-meta">${sessCount} session${sessCount !== 1 ? "s" : ""}</div>
+          <div class="project-date">${p.latestDate || "—"}</div>
+          <div class="chevron">›</div>
+        </div>
+        <div class="sessions-panel">
+          <div class="sessions-header">
+            <span>Date</span>
+            <span>Duration</span>
+            <span>Time</span>
+            <span>Saves</span>
+            <span>Status</span>
+          </div>
+          ${renderSessions(p.sessions)}
+        </div>
+      </div>`;
+  }).join("");
+}
+
+function renderSessions(sessions) {
+  return sessions
+    .slice()
+    .sort((a,b) => ((b.session_date||"")+(b.started||"")).localeCompare((a.session_date||"")+(a.started||"")))
+    .map(s => {
+      const active = s.ended === "still open";
+      const saves  = typeof s.saves === "number" ? s.saves : 0;
+      return `
+        <div class="session-row">
+          <span class="session-date">${s.session_date || "—"}</span>
+          <span class="session-dur">${fmtHrs(s.duration_hours||0)}</span>
+          <span class="session-time">${s.started || "—"} → ${active ? "now" : (s.ended || "—")}</span>
+          <span class="session-saves">${saves ? saves + " save" + (saves !== 1 ? "s" : "") : "—"}</span>
+          <span>
+            <span class="badge ${active ? "badge-active" : "badge-done"}">
+              ${active ? "● Active" : "Done"}
+            </span>
+          </span>
+        </div>`;
+    }).join("");
+}
+
+function toggleCard(name) {
+  if (openCards.has(name)) openCards.delete(name);
+  else openCards.add(name);
+  renderProjects();
+}
+
+function exportCSV() {
+  const cols = ["project_name","session_date","started","ended","duration_hours","duration_label","total_hours","saves"];
+  const rows = [cols.join(","), ...allData.map(r => cols.map(c => JSON.stringify(r[c]??"")))];
+  const a    = Object.assign(document.createElement("a"), {
+    href:     URL.createObjectURL(new Blob([rows.join("\n")], {type:"text/csv"})),
+    download: `ae_timelog_${new Date().toISOString().split("T")[0]}.csv`
+  });
+  a.click();
+}
+
+function fmtHrs(h) {
+  if (!h || h === 0) return "0h";
+  const hrs  = Math.floor(h);
+  const mins = Math.round((h - hrs) * 60);
+  if (hrs === 0)  return `${mins}m`;
+  if (mins === 0) return `${hrs}h`;
+  return `${hrs}h ${mins}m`;
+}
+
+function esc(s) {
+  return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+}
+
+function slugify(s) { return (s||"").replace(/[^a-z0-9]/gi,"_"); }
+
+function showError(msg) {
+  document.getElementById("project-list").innerHTML = `
+    <div class="empty-state">
+      <div class="empty-icon">!</div>
+      <h3>Connection Error</h3>
+      <p>${esc(msg)}</p>
+    </div>`;
+}
+
+loadData();
+setInterval(loadData, 60000);
+</script>
+</body>
+</html>
